@@ -1,0 +1,16 @@
+{
+  "id": "sess_demo_001",
+  "createdAt": "2026-01-21T00:00:00.000Z",
+  "updatedAt": "2026-01-21T00:00:00.000Z",
+  "state": "DRAFT",
+  "stoplight": "YELLOW",
+  "title": "Bridge PIA Locktight Demo",
+  "intent": "Demonstrate deterministic governance, stoplight enforcement, and human-only authority.",
+  "holding_space_003": [
+    "Final authority must remain with a human.",
+    "The system must be able to stop itself."
+  ],
+  "human_signoff": {
+    "signed": false
+  }
+}

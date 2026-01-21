@@ -1,0 +1,28 @@
+{
+  "name": "SeedSweep Policy Binding",
+  "version": "1.0.0",
+  "description": "Enforces SeedSweep preflight and resume gates in evaluate()",
+  
+  "gates": [
+    {
+      "id": "SEEDSWEEP_PREFLIGHT",
+      "trigger": "SESSION_START_COMPILATION",
+      "condition": "session.state === 'DRAFT'",
+      "requirement": "An APPROVED + GREEN SeedSweep artifact must exist",
+      "errorCode": "SEEDSWEEP_PREFLIGHT_REQUIRED"
+    },
+    {
+      "id": "SEEDSWEEP_RESUME",
+      "trigger": "SESSION_RESUME_AFTER_SEEDSWEEP",
+      "condition": "session.state === 'SEEDSWEEP_IN_PROGRESS'",
+      "requirement": "The active SeedSweep artifact must be APPROVED + GREEN",
+      "errorCode": "SEEDSWEEP_NOT_APPROVED"
+    }
+  ],
+  
+  "notes": [
+    "Preflight ensures human has reviewed system state before compilation begins",
+    "Resume ensures SeedSweep actually completed (all phases confirmed by HUMAN)",
+    "GREEN stoplight required = all .03 holding spaces filled, no RED signals"
+  ]
+}

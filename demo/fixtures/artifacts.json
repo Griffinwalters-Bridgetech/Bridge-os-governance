@@ -1,0 +1,176 @@
+[
+  {
+    "id": "ingestion",
+    "compiler": "INGESTION",
+    "status": "DRAFT",
+    "stoplight": "GREEN",
+    "payload": {
+      "source": "CHAT",
+      "raw_input": "Demonstrate Bridge PIA governance.",
+      "normalized_summary": "Request to demonstrate governance middleware behavior.",
+      "stoplight": "GREEN",
+      "holding_space_003": [
+        "Is the request sufficiently scoped?"
+      ]
+    },
+    "holding_space_003": [
+      "Initial intake appears well-formed."
+    ],
+    "approvals": {
+      "approvedByHuman": false
+    }
+  },
+
+  {
+    "id": "semantic",
+    "compiler": "SEMANTIC",
+    "status": "DRAFT",
+    "stoplight": "GREEN",
+    "payload": {
+      "terms": [
+        {
+          "term": ".03",
+          "definition": "A structural incompletion that requires human judgment to resolve."
+        }
+      ],
+      "ambiguities": [
+        "Interpretation of final authority boundaries."
+      ],
+      "stoplight": "GREEN",
+      "holding_space_003": [
+        "Is the .03 definition precise enough?"
+      ]
+    },
+    "holding_space_003": [
+      "Semantic layer appears internally consistent."
+    ],
+    "approvals": {
+      "approvedByHuman": false
+    }
+  },
+
+  {
+    "id": "execution",
+    "compiler": "EXECUTION",
+    "status": "DRAFT",
+    "stoplight": "GREEN",
+    "payload": {
+      "plan_steps": [
+        {
+          "step": "Evaluate governance gates in order.",
+          "reversible": true,
+          "owner": "HUMAN"
+        }
+      ],
+      "risks": [
+        "Premature automation without human signoff."
+      ],
+      "stoplight": "GREEN",
+      "holding_space_003": [
+        "Does any step implicitly bypass human authority?"
+      ]
+    },
+    "holding_space_003": [
+      "Execution requires explicit human checkpoints."
+    ],
+    "approvals": {
+      "approvedByHuman": false
+    }
+  },
+
+  {
+    "id": "governance",
+    "compiler": "GOVERNANCE",
+    "status": "DRAFT",
+    "stoplight": "GREEN",
+    "payload": {
+      "policy_version": "v0.1",
+      "rules_summary": "Human-only signoff, stoplight binding, SeedSweep preflight enforcement.",
+      "test_vectors": [
+        {
+          "name": "Block finalize without human signoff",
+          "given": {
+            "human_signoff": { "signed": false }
+          },
+          "then": {
+            "allowed": false
+          }
+        }
+      ],
+      "stoplight": "GREEN",
+      "holding_space_003": [
+        "Are all governance rules explicitly testable?"
+      ]
+    },
+    "holding_space_003": [
+      "Governance rules are minimal but sufficient."
+    ],
+    "approvals": {
+      "approvedByHuman": false
+    }
+  },
+
+  {
+    "id": "seedsweep",
+    "compiler": "SEEDSWEEP",
+    "status": "DRAFT",
+    "stoplight": "YELLOW",
+    "payload": {
+      "trigger": "HUMAN_REQUEST",
+      "phases": {
+        "stop": {
+          "pause_acknowledged": false,
+          "objective": "Prevent premature compilation before governance review.",
+          "holding_space_003": [
+            "Why must we pause before compiling?"
+          ]
+        },
+        "witness": {
+          "observations": [
+            "SeedSweep has not yet been approved."
+          ],
+          "holding_space_003": [
+            "What conditions are unmet?"
+          ]
+        },
+        "sweep": {
+          "debris": [
+            {
+              "item": "Unapproved SeedSweep",
+              "action": "PARK"
+            }
+          ],
+          "holding_space_003": [
+            "What cannot proceed yet?"
+          ]
+        },
+        "seed": {
+          "candidates": [
+            "Approve SeedSweep"
+          ],
+          "selected": "Approve SeedSweep",
+          "success_condition": "SeedSweep approved by human and set to GREEN.",
+          "holding_space_003": [
+            "Who has authority to approve?"
+          ]
+        },
+        "stabilize": {
+          "next_action": "Resume compilation after SeedSweep approval.",
+          "reversible": true,
+          "watch_for": [
+            "Rushing past governance."
+          ],
+          "holding_space_003": [
+            "What must be monitored after resuming?"
+          ]
+        }
+      }
+    },
+    "holding_space_003": [
+      "SeedSweep preserves .03 before compilation."
+    ],
+    "approvals": {
+      "approvedByHuman": false
+    }
+  }
+]
