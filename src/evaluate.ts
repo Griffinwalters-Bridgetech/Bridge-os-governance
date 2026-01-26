@@ -67,7 +67,8 @@ export function evaluate(
     }
 
     case "SESSION_TRIGGER_SEEDSWEEP": {
-      const ss = ensureSeedSweepArtifact(newArtifacts, actor);
+     const { ss, artifacts: nextArtifacts } = ensureSeedSweepArtifact(newArtifacts, actor);
+newArtifacts = nextArtifacts;
       newSession = {
         ...newSession,
         state: "SEEDSWEEP_IN_PROGRESS",
@@ -155,9 +156,9 @@ function bindStoplight(session: Session, artifacts: Artifact[]): Stoplight {
   return worst;
 }
 
-function ensureSeedSweepArtifact(artifacts: Artifact[], actor: Actor): Artifact {
+function ensureSeedSweepArtifact(artifacts: Artifact[], actor: Actor): { ss: Artifact; artifacts: Artifact[] } {
   const existing = artifacts.find((a) => a.compiler === "SEEDSWEEP" && a.status !== "REJECTED");
-  if (existing) return existing;
+ if (existing) return { ss: existing, artifacts };
 
   const id = `ss_${Math.random().toString(16).slice(2, 10)}`;
   const now = nowIso();
@@ -181,8 +182,7 @@ function ensureSeedSweepArtifact(artifacts: Artifact[], actor: Actor): Artifact 
     approvals: { approvedByHuman: false }
   };
 
-  artifacts.push(ss);
-  return ss;
+return { ss, artifacts: [...artifacts, ss] };
 }
 
 function nowIso(): string {
