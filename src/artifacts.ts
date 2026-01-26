@@ -78,28 +78,50 @@ export const SeedSweepPayloadSchema = z.object({
   })
 });
 
-export const ArtifactSchema = z.object({
+const ArtifactBaseSchema = z.object({
   id: z.string().min(1),
-  compiler: z.enum(["INGESTION", "SEMANTIC", "EXECUTION", "GOVERNANCE", "SEEDSWEEP"]),
   status: z.enum(["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"]),
   stoplight: z.enum(["GREEN", "YELLOW", "RED"]),
-
-  payload: z.union([
-    IngestionPayloadSchema,
-    SemanticPayloadSchema,
-    ExecutionPayloadSchema,
-    GovernancePayloadSchema,
-    SeedSweepPayloadSchema
-  ]),
-
   holding_space_003: HoldingSpace003Schema,
-
   approvals: z.object({
     approvedByHuman: z.boolean(),
     approvedAt: z.string().min(1).optional(),
     approvedBy: z.string().min(1).optional()
   })
 });
+
+const IngestionArtifactSchema = ArtifactBaseSchema.extend({
+  compiler: z.literal("INGESTION"),
+  payload: IngestionPayloadSchema
+});
+
+const SemanticArtifactSchema = ArtifactBaseSchema.extend({
+  compiler: z.literal("SEMANTIC"),
+  payload: SemanticPayloadSchema
+});
+
+const ExecutionArtifactSchema = ArtifactBaseSchema.extend({
+  compiler: z.literal("EXECUTION"),
+  payload: ExecutionPayloadSchema
+});
+
+const GovernanceArtifactSchema = ArtifactBaseSchema.extend({
+  compiler: z.literal("GOVERNANCE"),
+  payload: GovernancePayloadSchema
+});
+
+const SeedSweepArtifactSchema = ArtifactBaseSchema.extend({
+  compiler: z.literal("SEEDSWEEP"),
+  payload: SeedSweepPayloadSchema
+});
+
+export const ArtifactSchema = z.discriminatedUnion("compiler", [
+  IngestionArtifactSchema,
+  SemanticArtifactSchema,
+  ExecutionArtifactSchema,
+  GovernanceArtifactSchema,
+  SeedSweepArtifactSchema
+]);
 
 export type Artifact = z.infer<typeof ArtifactSchema> & {
   compiler: CompilerId;
