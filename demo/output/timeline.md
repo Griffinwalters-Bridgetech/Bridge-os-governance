@@ -1,6 +1,6 @@
 # Bridge PIA Locktight Demo Timeline
 
-Started: 2026-01-26T21:35:01.101Z
+Started: 2026-01-27T19:13:45.704Z
 
 🛑 BLOCKED Step 1: Attempt compilation before SeedSweep approved (should BLOCK) | state=DRAFT | stoplight=YELLOW
 🛑 BLOCKED Step 2: Assistant attempts to approve SeedSweep (should BLOCK - human gate) | state=DRAFT | stoplight=YELLOW
@@ -19,7 +19,7 @@ Started: 2026-01-26T21:35:01.101Z
 🛑 BLOCKED Step 15: Assistant attempts finalize (should BLOCK - human gate) | state=AWAITING_HUMAN_SIGNOFF | stoplight=GREEN
 ✅ ALLOWED Step 16: Human finalize | state=FINALIZED | stoplight=GREEN
 
-Completed: 2026-01-26T21:35:01.121Z
+Completed: 2026-01-27T19:13:45.723Z
 
 ## Summary
 
