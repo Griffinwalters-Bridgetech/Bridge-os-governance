@@ -87,11 +87,11 @@ bridge-os-governance/
 
 ## License
 
-Proprietary. All rights reserved.  
-Bridge Technologies LLC / 99.97 Labs
+Proprietary. All rights reserved.
+© 2026 Griffin Walters. Rights to be assigned to Bridge Technologies LLC upon formation.
 
 ---
 
 ## Contact
 
-For inquiries: [your email or website]
+For inquiries: griffinwalters.pinnacle@gmail.com
