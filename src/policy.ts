@@ -1,6 +1,7 @@
 import type { Actor, Action, EvalError } from "./types";
 import type { Session } from "./session";
 import type { Artifact } from "./artifacts";
+const CORE_COMPILERS = ["INGESTION", "SEMANTIC", "EXECUTION", "GOVERNANCE"] as const;
 
 export function humanOnlyGate(actor: Actor, action: Action): EvalError[] {
   const isArtifactStatusChange = action.type === "ARTIFACT_SET_STATUS" && (action.status === "APPROVED" || action.status === "REJECTED");
@@ -17,6 +18,23 @@ export function transitionPolicy(session: Session, artifacts: Artifact[], action
   const errors: EvalError[] = [];
 
   const core = coreArtifacts(artifacts);
+  for (const compiler of CORE_COMPILERS) {
+    const matches = core.filter((a) => a.compiler === compiler);
+
+    if (matches.length === 0) {
+      errors.push({
+        code: "CORE_ARTIFACT_MISSING",
+        message: `Missing required ${compiler} artifact.`
+      });
+    }
+
+    if (matches.length > 1) {
+      errors.push({
+        code: "DUPLICATE_CORE_ARTIFACT",
+        message: `Multiple ${compiler} artifacts detected. Only one is allowed.`
+      });
+    }
+  }
   const anyCoreMissing = ["INGESTION", "SEMANTIC", "EXECUTION", "GOVERNANCE"].some((id) => !core.some((a) => a.compiler === id));
 
   const anyRed = core.some((a) => a.stoplight === "RED") || session.stoplight === "RED";
@@ -30,13 +48,37 @@ export function transitionPolicy(session: Session, artifacts: Artifact[], action
   }
 
   if (action.type === "SESSION_RESUME_AFTER_SEEDSWEEP") {
-    if (session.state !== "SEEDSWEEP_IN_PROGRESS") errors.push({ code: "NOT_IN_SEEDSWEEP", message: "Session is not in SEEDSWEEP_IN_PROGRESS." });
+    if (session.state !== "SEEDSWEEP_IN_PROGRESS") {
+      errors.push({
+        code: "NOT_IN_SEEDSWEEP",
+        message: "Session is not in SEEDSWEEP_IN_PROGRESS."
+      });
+    }
 
-    if (session.activeSeedSweepArtifactId) {
+    if (!session.activeSeedSweepArtifactId) {
+      errors.push({
+        code: "NO_ACTIVE_SEEDSWEEP",
+        message: "Cannot resume: no active SeedSweep artifact."
+      });
+    } else {
       const ss = artifacts.find((a) => a.id === session.activeSeedSweepArtifactId);
-      if (!ss) errors.push({ code: "SEEDSWEEP_ARTIFACT_MISSING", message: "Active SeedSweep artifact not found." });
-      else if (ss.compiler !== "SEEDSWEEP") errors.push({ code: "SEEDSWEEP_WRONG_COMPILER", message: "Active SeedSweep artifact is not a SEEDSWEEP artifact." });
-      else if (ss.status !== "APPROVED") errors.push({ code: "SEEDSWEEP_NOT_APPROVED", message: "Cannot resume: SeedSweep artifact must be APPROVED." });
+
+      if (!ss) {
+        errors.push({
+          code: "SEEDSWEEP_ARTIFACT_MISSING",
+          message: "Active SeedSweep artifact not found."
+        });
+      } else if (ss.compiler !== "SEEDSWEEP") {
+        errors.push({
+          code: "SEEDSWEEP_WRONG_COMPILER",
+          message: "Active SeedSweep artifact is not a SEEDSWEEP artifact."
+        });
+      } else if (ss.status !== "APPROVED") {
+        errors.push({
+          code: "SEEDSWEEP_NOT_APPROVED",
+          message: "Cannot resume: SeedSweep artifact must be APPROVED."
+        });
+      }
     }
   }
 

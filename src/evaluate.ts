@@ -11,12 +11,16 @@ import { applySeedSweepPolicyGate } from "./evaluate.seedSweep-hook";
  * Deterministic pure function.
  * No AI judgment: just rules.
  */
+
 export function evaluate(
   session: Session,
   artifacts: Artifact[],
   action: Action,
   actor: Actor
 ): EvalResult {
+
+  const now = nowIso();
+
   const errors: EvalError[] = [];
   const side_effects: string[] = [];
 
@@ -67,14 +71,16 @@ export function evaluate(
     }
 
     case "SESSION_TRIGGER_SEEDSWEEP": {
-      const ss = ensureSeedSweepArtifact(newArtifacts, actor);
+      const result = ensureSeedSweepArtifact(newArtifacts, actor, now, session.id);
+      newArtifacts = result.artifacts;
+
       newSession = {
         ...newSession,
         state: "SEEDSWEEP_IN_PROGRESS",
-        activeSeedSweepArtifactId: ss.id,
-        updatedAt: nowIso()
+        activeSeedSweepArtifactId: result.seedSweep.id,
+        updatedAt: now
       };
-      side_effects.push(`SeedSweep triggered: ${action.reason}. Active artifact: ${ss.id}`);
+      side_effects.push(`SeedSweep triggered: ${action.reason}. Active artifact: ${result.seedSweep.id}`);
       break;
     }
 
@@ -133,6 +139,19 @@ export function evaluate(
       side_effects.push(`Artifact ${action.artifactId} stoplight set to ${action.stoplight}.`);
       break;
     }
+
+    default: {
+      return {
+        allowed: false,
+        errors: [{
+        code: "UNKNOWN_ACTION",
+          message: `Unhandled action type: ${(action as any).type}`
+        }],
+        newSession,
+        newArtifacts,
+        side_effects
+      };
+    }
   }
 
   // Re-bind stoplight after mutations.
@@ -150,17 +169,26 @@ function bindStoplight(session: Session, artifacts: Artifact[]): Stoplight {
     if (ss) lights.push(ss.stoplight);
   }
 
-  const worst = worstStoplight(lights);
-  if (session.state === "IN_COMPILATION" && lights.length === 0) return "YELLOW";
-  return worst;
+  if (session.state === "IN_COMPILATION" && lights.length === 0) {
+    return "YELLOW";
+  }
+  return worstStoplight(lights);
 }
 
-function ensureSeedSweepArtifact(artifacts: Artifact[], actor: Actor): Artifact {
-  const existing = artifacts.find((a) => a.compiler === "SEEDSWEEP" && a.status !== "REJECTED");
-  if (existing) return existing;
+function ensureSeedSweepArtifact(
+  artifacts: Artifact[],
+  actor: Actor,
+  now: string,
+  sessionId?: string ): { artifacts: Artifact[]; seedSweep: Artifact } 
+{
+  const existing = artifacts.find(
+    (a) => a.compiler === "SEEDSWEEP" && a.status !== "REJECTED"
+  );
+  if (existing) {
+    return { artifacts, seedSweep: existing };
+  }
 
-  const id = `ss_${Math.random().toString(16).slice(2, 10)}`;
-  const now = nowIso();
+  const id = `ss_${sessionId ?? "session"}_${artifacts.length}`;
 
   const ss: Artifact = {
     id,
@@ -181,8 +209,10 @@ function ensureSeedSweepArtifact(artifacts: Artifact[], actor: Actor): Artifact 
     approvals: { approvedByHuman: false }
   };
 
-  artifacts.push(ss);
-  return ss;
+  return {
+    artifacts: [...artifacts, ss],
+    seedSweep: ss
+  };
 }
 
 function nowIso(): string {
