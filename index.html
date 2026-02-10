@@ -1,12 +1,977 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bridge OS — Governance Compiler</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge OS — Governance Engine Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface-2: #1a1e28;
+    --border: #252a36;
+    --text: #e4e8f1;
+    --text-dim: #7a8194;
+    --text-muted: #4a5068;
+    --green: #22c55e;
+    --green-bg: rgba(34, 197, 94, 0.08);
+    --green-border: rgba(34, 197, 94, 0.25);
+    --yellow: #eab308;
+    --yellow-bg: rgba(234, 179, 8, 0.08);
+    --yellow-border: rgba(234, 179, 8, 0.25);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.08);
+    --red-border: rgba(239, 68, 68, 0.25);
+    --accent: #6366f1;
+    --accent-dim: rgba(99, 102, 241, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* --- HEADER --- */
+  .header {
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+  .header-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .header-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* --- LAYOUT --- */
+  .container {
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    height: calc(100vh - 73px);
+  }
+
+  /* --- LEFT PANEL: SESSION --- */
+  .panel-left {
+    border-right: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Session State */
+  .session-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .session-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+  .session-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Stoplight */
+  .stoplight-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .stoplight-dots {
+    display: flex;
+    gap: 8px;
+  }
+  .stoplight-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    transition: all 0.4s ease;
+  }
+  .stoplight-dot.active-green {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+  }
+  .stoplight-dot.active-yellow {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.5);
+  }
+  .stoplight-dot.active-red {
+    background: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+    animation: pulse-red 2s ease-in-out infinite;
+  }
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.8); }
+  }
+  .stoplight-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .stoplight-label.green { color: var(--green); }
+  .stoplight-label.yellow { color: var(--yellow); }
+  .stoplight-label.red { color: var(--red); }
+
+  /* Artifacts */
+  .artifact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: all 0.3s ease;
+  }
+  .artifact-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .artifact-badges { display: flex; gap: 6px; align-items: center; }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .badge-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-status {
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .badge-approved {
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+  }
+
+  /* Signoff */
+  .signoff-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .signoff-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .signoff-status.signed { color: var(--green); }
+
+  /* --- CENTER PANEL: ACTIONS --- */
+  .panel-center {
+    padding: 24px 32px;
+    overflow-y: auto;
+  }
+
+  .scenario-header {
+    margin-bottom: 24px;
+  }
+  .scenario-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+  .scenario-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* Action Buttons */
+  .action-group {
+    margin-bottom: 24px;
+  }
+  .action-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+  .action-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .action-btn:disabled:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    transform: none;
+  }
+  .action-btn .btn-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .action-btn.human-only {
+    border-left: 3px solid var(--accent);
+  }
+  .action-btn.assistant-btn {
+    border-left: 3px solid var(--text-muted);
+  }
+
+  /* Result flash */
+  .result-display {
+    margin-top: 20px;
+    min-height: 80px;
+  }
+  .result-card {
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    animation: fadeSlideIn 0.3s ease;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-allowed {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+  }
+  .result-blocked {
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+  }
+  .result-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  /* Holding space */
+  .holding-space {
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+  .holding-space-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .holding-space-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* --- RIGHT PANEL: AUDIT LOG --- */
+  .panel-right {
+    border-left: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .audit-entry {
+    padding: 12px 14px;
+    border-left: 2px solid var(--border);
+    margin-bottom: 8px;
+    animation: fadeSlideIn 0.3s ease;
+  }
+  .audit-entry.allowed { border-left-color: var(--green); }
+  .audit-entry.blocked { border-left-color: var(--red); }
+  .audit-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .audit-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .audit-actor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .audit-result {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+  .audit-result.pass { color: var(--green); }
+  .audit-result.fail { color: var(--red); }
+  .audit-error {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--red);
+    margin-top: 2px;
+    padding-left: 8px;
+  }
+
+  .audit-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  /* Reset button */
+  .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Footer bar */
+  .footer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 100;
+  }
+  .footer-bar .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">BRIDGE<span>.OS</span></div>
+    <div class="header-badge">GOVERNANCE ENGINE v0.1</div>
+  </div>
+  <div class="header-right">deterministic · auditable · human-gated</div>
+</div>
+
+<div class="container">
+  <!-- LEFT: Session State -->
+  <div class="panel-left">
+    <div class="panel-title">Session State</div>
+
+    <div class="session-card">
+      <div class="session-label">STATE</div>
+      <div class="session-value" id="session-state">DRAFT</div>
+    </div>
+
+    <div class="stoplight-display">
+      <div class="stoplight-dots">
+        <div class="stoplight-dot" id="dot-green"></div>
+        <div class="stoplight-dot" id="dot-yellow"></div>
+        <div class="stoplight-dot" id="dot-red"></div>
+      </div>
+      <div class="stoplight-label" id="stoplight-text">—</div>
+    </div>
+
+    <div class="panel-title" style="margin-top:20px">Artifacts</div>
+    <div id="artifacts-list"></div>
+
+    <div class="signoff-card">
+      <div class="session-label">HUMAN SIGNOFF</div>
+      <div class="signoff-status" id="signoff-status">Not signed</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Actions -->
+  <div class="panel-center">
+    <div class="scenario-header">
+      <div class="scenario-title">Governance Engine — Interactive Demo</div>
+      <div class="scenario-subtitle">Every action is evaluated. Every gate is enforced. Every decision is logged.</div>
+    </div>
+
+    <div class="action-group">
+      <div class="action-group-label">Session Controls</div>
+      <div class="action-grid">
+        <button class="action-btn" onclick="doAction({type:'SESSION_START_COMPILATION'}, 'HUMAN')" id="btn-start">
+          Start Compilation
+          <span class="btn-sub">HUMAN · begin governance flow</span>
+        </button>
+        <button class="action-btn" onclick="doAction({type:'SESSION_TRIGGER_SEEDSWEEP', reason:'Manual pause requested'}, 'HUMAN')" id="btn-seedsweep">
+          Trigger SeedSweep
+          <span class="btn-sub">HUMAN · pause + recovery rhythm</span>
+        </button>
+        <button class="action-btn" onclick="doAction({type:'SESSION_RESUME_AFTER_SEEDSWEEP'}, 'HUMAN')" id="btn-resume">
+          Resume After SeedSweep
+          <span class="btn-sub">HUMAN · return to compilation</span>
+        </button>
+        <button class="action-btn" onclick="doAction({type:'SESSION_REQUEST_FINALIZE'}, 'HUMAN')" id="btn-req-final">
+          Request Finalize
+          <span class="btn-sub">HUMAN · all artifacts must be approved</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <div class="action-group-label">Human-Only Gates</div>
+      <div class="action-grid">
+        <button class="action-btn human-only" onclick="doAction({type:'SESSION_SIGNOFF', signerName:'Griffin', signerRole:'FOUNDER'}, 'HUMAN')" id="btn-signoff">
+          Human Signoff
+          <span class="btn-sub">🔒 HUMAN ONLY · cannot be bypassed</span>
+        </button>
+        <button class="action-btn human-only" onclick="doAction({type:'SESSION_FINALIZE'}, 'HUMAN')" id="btn-finalize">
+          Finalize Session
+          <span class="btn-sub">🔒 HUMAN ONLY · requires signoff first</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <div class="action-group-label">Gate Test — AI Attempts Restricted Action</div>
+      <div class="action-grid">
+        <button class="action-btn assistant-btn" onclick="doAction({type:'SESSION_SIGNOFF', signerName:'AI', signerRole:'ASSISTANT'}, 'ASSISTANT')">
+          AI Tries Signoff
+          <span class="btn-sub">⚠ ASSISTANT · should be BLOCKED</span>
+        </button>
+        <button class="action-btn assistant-btn" onclick="doAction({type:'SESSION_FINALIZE'}, 'ASSISTANT')">
+          AI Tries Finalize
+          <span class="btn-sub">⚠ ASSISTANT · should be BLOCKED</span>
+        </button>
+        <button class="action-btn assistant-btn" onclick="doAction({type:'ARTIFACT_SET_STATUS', artifactId:'art_ingestion', status:'APPROVED'}, 'ASSISTANT')">
+          AI Tries Approve
+          <span class="btn-sub">⚠ ASSISTANT · should be BLOCKED</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <div class="action-group-label">Artifact Controls</div>
+      <div class="action-grid">
+        <button class="action-btn human-only" onclick="approveAllArtifacts()">
+          Approve All Artifacts
+          <span class="btn-sub">🔒 HUMAN ONLY · approve each core artifact</span>
+        </button>
+        <button class="action-btn" onclick="setArtifactStoplight('art_execution', 'RED')">
+          Set Execution → RED
+          <span class="btn-sub">HUMAN · test stoplight binding</span>
+        </button>
+        <button class="action-btn" onclick="setAllStoplightsGreen()">
+          Set All → GREEN
+          <span class="btn-sub">HUMAN · clear all stoplights</span>
+        </button>
+        <button class="action-btn human-only" onclick="approveSeedSweep()">
+          Approve SeedSweep
+          <span class="btn-sub">🔒 HUMAN ONLY · approve + set GREEN</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="result-display" id="result-display"></div>
+
+    <div class="holding-space">
+      <div class="holding-space-title">.03 Holding Space</div>
+      <div class="holding-space-text" id="holding-text">
+        "The system cannot complete what only the human can complete."
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Audit Log -->
+  <div class="panel-right">
+    <div class="panel-title">Audit Trail</div>
+    <div class="audit-count" id="audit-count">0 evaluations</div>
+    <div id="audit-log"></div>
+    <button class="reset-btn" onclick="resetDemo()">↻ Reset Demo</button>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <div><span class="dot"></span>Bridge OS Governance Engine — localhost</div>
+  <div>© 2026 Bridge Technologies LLC / 99.97 Labs</div>
+</div>
+
+<script>
+// ============================================================
+// BRIDGE OS GOVERNANCE ENGINE — BROWSER DEMO
+// Faithful reproduction of evaluate.ts logic
+// ============================================================
+
+// --- Types ---
+const CORE_COMPILERS = ["INGESTION", "SEMANTIC", "EXECUTION", "GOVERNANCE"];
+const STOPLIGHT_RANK = { GREEN: 0, YELLOW: 1, RED: 2 };
+
+function worstStoplight(lights) {
+  if (lights.length === 0) return "GREEN";
+  return lights.reduce((w, c) => STOPLIGHT_RANK[c] > STOPLIGHT_RANK[w] ? c : w, "GREEN");
+}
+
+function nowIso() { return new Date().toISOString(); }
+
+// --- Initial State ---
+function createInitialSession() {
+  return {
+    id: "session_demo_001",
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    state: "DRAFT",
+    stoplight: "YELLOW",
+    title: "Bridge OS Demo Session",
+    intent: "Demonstrate governance gates, stoplight binding, and human authority enforcement.",
+    holding_space_003: ["What must remain human here?"],
+    human_signoff: { signed: false },
+    activeSeedSweepArtifactId: undefined
+  };
+}
+
+function createInitialArtifacts() {
+  return [
+    {
+      id: "art_ingestion", compiler: "INGESTION", status: "DRAFT", stoplight: "GREEN",
+      holding_space_003: ["Raw input preserved for human review."],
+      approvals: { approvedByHuman: false },
+      payload: { source: "CHAT", raw_input: "User request for governance demo", normalized_summary: "Demo of Bridge OS governance flow", stoplight: "GREEN", holding_space_003: ["Preserved."] }
+    },
+    {
+      id: "art_semantic", compiler: "SEMANTIC", status: "DRAFT", stoplight: "GREEN",
+      holding_space_003: ["Semantic meaning belongs to the human."],
+      approvals: { approvedByHuman: false },
+      payload: { terms: [{ term: "governance", definition: "Human authority over AI decisions" }], stoplight: "GREEN", holding_space_003: ["Terms require human validation."] }
+    },
+    {
+      id: "art_execution", compiler: "EXECUTION", status: "DRAFT", stoplight: "GREEN",
+      holding_space_003: ["Execution plan must be human-approved."],
+      approvals: { approvedByHuman: false },
+      payload: { plan_steps: [{ step: "Evaluate action through governance engine", reversible: true, owner: "HUMAN" }], stoplight: "GREEN", holding_space_003: ["Steps need human sign-off."] }
+    },
+    {
+      id: "art_governance", compiler: "GOVERNANCE", status: "DRAFT", stoplight: "GREEN",
+      holding_space_003: ["Governance rules cannot be overridden by AI."],
+      approvals: { approvedByHuman: false },
+      payload: { policy_version: "0.1.0", rules_summary: "Human gates on approval, signoff, finalization. Stoplight binding. .03 enforcement.", test_vectors: [{ name: "human_gate", given: { actor: "ASSISTANT" }, then: { allowed: false } }], stoplight: "GREEN", holding_space_003: ["Policy is human-authored."] }
+    }
+  ];
+}
+
+let session = createInitialSession();
+let artifacts = createInitialArtifacts();
+let auditLog = [];
+
+// --- Evaluate (faithful to evaluate.ts) ---
+function evaluate(session, artifacts, action, actor) {
+  const errors = [];
+  const side_effects = [];
+
+  // Human-only gates
+  const isArtifactApproval = action.type === "ARTIFACT_SET_STATUS" && (action.status === "APPROVED" || action.status === "REJECTED");
+  const isSignoff = action.type === "SESSION_SIGNOFF";
+  const isFinalize = action.type === "SESSION_FINALIZE";
+
+  if (actor === "ASSISTANT" && (isArtifactApproval || isSignoff || isFinalize)) {
+    errors.push({ code: "HUMAN_GATE_REQUIRED", message: `Action ${action.type} requires HUMAN authority.` });
+  }
+
+  if (errors.length > 0) {
+    return { allowed: false, errors, newSession: session, newArtifacts: artifacts, side_effects };
+  }
+
+  // SeedSweep policy gate
+  if (action.type === "SESSION_START_COMPILATION") {
+    // Check if there's a pending seedsweep that needs approval
+    const pendingSS = artifacts.find(a => a.compiler === "SEEDSWEEP" && a.status !== "APPROVED" && a.status !== "REJECTED");
+    if (pendingSS) {
+      errors.push({ code: "SEEDSWEEP_PENDING", message: "Cannot start compilation: pending SeedSweep requires human approval." });
+    }
+  }
+
+  // Stoplight binding
+  const core = artifacts.filter(a => CORE_COMPILERS.includes(a.compiler));
+  const lights = core.map(a => a.stoplight);
+
+  if (session.state === "SEEDSWEEP_IN_PROGRESS" && session.activeSeedSweepArtifactId) {
+    const ss = artifacts.find(a => a.id === session.activeSeedSweepArtifactId);
+    if (ss) lights.push(ss.stoplight);
+  }
+
+  let boundStoplight = (session.state === "IN_COMPILATION" && lights.length === 0) ? "YELLOW" : worstStoplight(lights);
+
+  let newSession = { ...session, stoplight: boundStoplight, updatedAt: nowIso() };
+  let newArtifacts = artifacts.map(a => ({ ...a }));
+
+  // Transition policies
+  const anyCoreMissing = CORE_COMPILERS.some(id => !core.some(a => a.compiler === id));
+  const anyRed = core.some(a => a.stoplight === "RED") || newSession.stoplight === "RED";
+  const allApproved = CORE_COMPILERS.every(id => core.some(a => a.compiler === id && a.status === "APPROVED"));
+
+  if (action.type === "SESSION_START_COMPILATION") {
+    if (session.state === "FINALIZED") errors.push({ code: "SESSION_ALREADY_FINAL", message: "Session already FINALIZED." });
+    if (anyCoreMissing) errors.push({ code: "MISSING_CORE_ARTIFACTS", message: "Cannot start: missing core artifacts." });
+  }
+
+  if (action.type === "SESSION_RESUME_AFTER_SEEDSWEEP") {
+    if (session.state !== "SEEDSWEEP_IN_PROGRESS") {
+      errors.push({ code: "NOT_IN_SEEDSWEEP", message: "Session is not in SEEDSWEEP_IN_PROGRESS." });
+    }
+    if (session.activeSeedSweepArtifactId) {
+      const ss = artifacts.find(a => a.id === session.activeSeedSweepArtifactId);
+      if (!ss) errors.push({ code: "SEEDSWEEP_ARTIFACT_MISSING", message: "Active SeedSweep artifact not found." });
+      else if (ss.status !== "APPROVED") errors.push({ code: "SEEDSWEEP_NOT_APPROVED", message: "Cannot resume: SeedSweep must be APPROVED." });
+    }
+  }
+
+  if (action.type === "SESSION_REQUEST_FINALIZE") {
+    if (!allApproved) errors.push({ code: "CORE_NOT_APPROVED", message: "All core artifacts must be APPROVED." });
+    if (anyRed) errors.push({ code: "STOPLIGHT_RED_BLOCKS_FINALIZE", message: "RED stoplight blocks finalization." });
+  }
+
+  if (action.type === "SESSION_SIGNOFF") {
+    if (session.state !== "AWAITING_HUMAN_SIGNOFF") errors.push({ code: "NOT_AWAITING_SIGNOFF", message: "Session must be AWAITING_HUMAN_SIGNOFF." });
+  }
+
+  if (action.type === "SESSION_FINALIZE") {
+    if (session.state !== "AWAITING_HUMAN_SIGNOFF") errors.push({ code: "NOT_READY_TO_FINALIZE", message: "Session must be AWAITING_HUMAN_SIGNOFF." });
+    if (!session.human_signoff.signed) errors.push({ code: "SIGNOFF_REQUIRED", message: "Human signoff is required." });
+    if (!allApproved) errors.push({ code: "CORE_NOT_APPROVED", message: "All core artifacts must be APPROVED." });
+    if (anyRed) errors.push({ code: "STOPLIGHT_RED_BLOCKS_FINALIZE", message: "RED stoplight blocks finalization." });
+  }
+
+  if (errors.length > 0) {
+    return { allowed: false, errors, newSession, newArtifacts, side_effects };
+  }
+
+  // Apply action
+  switch (action.type) {
+    case "SESSION_START_COMPILATION":
+      newSession = { ...newSession, state: "IN_COMPILATION", updatedAt: nowIso() };
+      side_effects.push("Session moved to IN_COMPILATION.");
+      break;
+
+    case "SESSION_TRIGGER_SEEDSWEEP": {
+      const ssId = `ss_demo_${newArtifacts.length}`;
+      const ssArtifact = {
+        id: ssId, compiler: "SEEDSWEEP", status: "DRAFT", stoplight: "YELLOW",
+        holding_space_003: ["SeedSweep: preserve .03 at artifact level."],
+        approvals: { approvedByHuman: false },
+        payload: { trigger: "HUMAN_REQUEST", phases: {} }
+      };
+      newArtifacts = [...newArtifacts, ssArtifact];
+      newSession = { ...newSession, state: "SEEDSWEEP_IN_PROGRESS", activeSeedSweepArtifactId: ssId, updatedAt: nowIso() };
+      side_effects.push(`SeedSweep triggered: ${action.reason}`);
+      break;
+    }
+
+    case "SESSION_RESUME_AFTER_SEEDSWEEP":
+      newSession = { ...newSession, state: "IN_COMPILATION", updatedAt: nowIso() };
+      side_effects.push("Session resumed after SeedSweep.");
+      break;
+
+    case "SESSION_REQUEST_FINALIZE":
+      newSession = { ...newSession, state: "AWAITING_HUMAN_SIGNOFF", updatedAt: nowIso() };
+      side_effects.push("Session moved to AWAITING_HUMAN_SIGNOFF.");
+      break;
+
+    case "SESSION_SIGNOFF":
+      newSession = {
+        ...newSession,
+        human_signoff: { signed: true, signedBy: action.signerName, signedRole: action.signerRole || "HUMAN", signedAt: nowIso() },
+        updatedAt: nowIso()
+      };
+      side_effects.push("Human signoff recorded.");
+      break;
+
+    case "SESSION_FINALIZE":
+      newSession = { ...newSession, state: "FINALIZED", updatedAt: nowIso() };
+      side_effects.push("Session FINALIZED.");
+      break;
+
+    case "ARTIFACT_SET_STATUS":
+      newArtifacts = newArtifacts.map(a =>
+        a.id === action.artifactId
+          ? { ...a, status: action.status, approvals: action.status === "APPROVED" ? { approvedByHuman: actor === "HUMAN", approvedAt: nowIso() } : a.approvals }
+          : a
+      );
+      side_effects.push(`Artifact ${action.artifactId} → ${action.status}.`);
+      break;
+
+    case "ARTIFACT_SET_STOPLIGHT":
+      newArtifacts = newArtifacts.map(a => a.id === action.artifactId ? { ...a, stoplight: action.stoplight } : a);
+      side_effects.push(`Artifact ${action.artifactId} stoplight → ${action.stoplight}.`);
+      break;
+
+    default:
+      return { allowed: false, errors: [{ code: "UNKNOWN_ACTION", message: `Unhandled: ${action.type}` }], newSession, newArtifacts, side_effects };
+  }
+
+  // Re-bind stoplight
+  const postCore = newArtifacts.filter(a => CORE_COMPILERS.includes(a.compiler));
+  const postLights = postCore.map(a => a.stoplight);
+  if (newSession.state === "SEEDSWEEP_IN_PROGRESS" && newSession.activeSeedSweepArtifactId) {
+    const ss = newArtifacts.find(a => a.id === newSession.activeSeedSweepArtifactId);
+    if (ss) postLights.push(ss.stoplight);
+  }
+  newSession = { ...newSession, stoplight: worstStoplight(postLights), updatedAt: nowIso() };
+
+  return { allowed: true, errors: [], newSession, newArtifacts, side_effects };
+}
+
+// --- UI Logic ---
+function doAction(action, actor) {
+  const result = evaluate(session, artifacts, action, actor);
+
+  if (result.allowed) {
+    session = result.newSession;
+    artifacts = result.newArtifacts;
+  }
+
+  // Log
+  auditLog.unshift({
+    time: new Date().toLocaleTimeString(),
+    action: action.type,
+    actor,
+    allowed: result.allowed,
+    errors: result.errors,
+    side_effects: result.side_effects
+  });
+
+  renderAll();
+  showResult(result, action, actor);
+}
+
+function approveAllArtifacts() {
+  CORE_COMPILERS.forEach(compiler => {
+    const art = artifacts.find(a => a.compiler === compiler);
+    if (art && art.status !== "APPROVED") {
+      doAction({ type: "ARTIFACT_SET_STATUS", artifactId: art.id, status: "APPROVED" }, "HUMAN");
+    }
+  });
+}
+
+function setArtifactStoplight(artifactId, stoplight) {
+  doAction({ type: "ARTIFACT_SET_STOPLIGHT", artifactId, stoplight }, "HUMAN");
+}
+
+function setAllStoplightsGreen() {
+  artifacts.forEach(a => {
+    if (a.stoplight !== "GREEN") {
+      doAction({ type: "ARTIFACT_SET_STOPLIGHT", artifactId: a.id, stoplight: "GREEN" }, "HUMAN");
+    }
+  });
+}
+
+function approveSeedSweep() {
+  const ss = artifacts.find(a => a.compiler === "SEEDSWEEP" && a.status !== "APPROVED");
+  if (ss) {
+    doAction({ type: "ARTIFACT_SET_STATUS", artifactId: ss.id, status: "APPROVED" }, "HUMAN");
+    doAction({ type: "ARTIFACT_SET_STOPLIGHT", artifactId: ss.id, stoplight: "GREEN" }, "HUMAN");
+  }
+}
+
+function showResult(result, action, actor) {
+  const el = document.getElementById('result-display');
+  const cls = result.allowed ? 'result-allowed' : 'result-blocked';
+  const icon = result.allowed ? '✅' : '🚫';
+  const title = result.allowed ? 'ALLOWED' : 'BLOCKED';
+
+  let errorHtml = '';
+  if (result.errors.length > 0) {
+    errorHtml = result.errors.map(e => `<div style="margin-top:4px">↳ ${e.code}: ${e.message}</div>`).join('');
+  }
+  let effectHtml = '';
+  if (result.side_effects.length > 0) {
+    effectHtml = result.side_effects.map(e => `<div style="margin-top:4px; color: var(--green)">→ ${e}</div>`).join('');
+  }
+
+  el.innerHTML = `<div class="result-card ${cls}">
+    <div class="result-title">${icon} ${title} — ${action.type}</div>
+    <div>Actor: ${actor}</div>
+    ${errorHtml}
+    ${effectHtml}
+  </div>`;
+}
+
+function resetDemo() {
+  session = createInitialSession();
+  artifacts = createInitialArtifacts();
+  auditLog = [];
+  document.getElementById('result-display').innerHTML = '';
+  renderAll();
+}
+
+// --- Render ---
+function renderAll() {
+  // Session state
+  document.getElementById('session-state').textContent = session.state;
+
+  // Stoplight
+  const sl = session.stoplight;
+  document.getElementById('dot-green').className = 'stoplight-dot' + (sl === 'GREEN' ? ' active-green' : '');
+  document.getElementById('dot-yellow').className = 'stoplight-dot' + (sl === 'YELLOW' ? ' active-yellow' : '');
+  document.getElementById('dot-red').className = 'stoplight-dot' + (sl === 'RED' ? ' active-red' : '');
+  const slLabel = document.getElementById('stoplight-text');
+  slLabel.textContent = sl;
+  slLabel.className = 'stoplight-label ' + sl.toLowerCase();
+
+  // Artifacts
+  const artList = document.getElementById('artifacts-list');
+  artList.innerHTML = artifacts.map(a => {
+    const slClass = `badge-${a.stoplight.toLowerCase()}`;
+    const statusClass = a.status === 'APPROVED' ? 'badge-approved' : 'badge-status';
+    return `<div class="artifact-row">
+      <span class="artifact-name">${a.compiler}</span>
+      <span class="artifact-badges">
+        <span class="badge ${statusClass}">${a.status}</span>
+        <span class="badge ${slClass}">${a.stoplight}</span>
+      </span>
+    </div>`;
+  }).join('');
+
+  // Signoff
+  const signoffEl = document.getElementById('signoff-status');
+  if (session.human_signoff.signed) {
+    signoffEl.textContent = `✓ Signed by ${session.human_signoff.signedBy} (${session.human_signoff.signedRole})`;
+    signoffEl.className = 'signoff-status signed';
+  } else {
+    signoffEl.textContent = 'Not signed';
+    signoffEl.className = 'signoff-status';
+  }
+
+  // Audit log
+  document.getElementById('audit-count').textContent = `${auditLog.length} evaluation${auditLog.length !== 1 ? 's' : ''}`;
+  const logEl = document.getElementById('audit-log');
+  logEl.innerHTML = auditLog.map(entry => {
+    const cls = entry.allowed ? 'allowed' : 'blocked';
+    const resultCls = entry.allowed ? 'pass' : 'fail';
+    const resultText = entry.allowed ? '✓ ALLOWED' : '✗ BLOCKED';
+    const errorsHtml = entry.errors.map(e => `<div class="audit-error">↳ ${e.code}</div>`).join('');
+    return `<div class="audit-entry ${cls}">
+      <div class="audit-time">${entry.time}</div>
+      <div class="audit-action">${entry.action}</div>
+      <div class="audit-actor">Actor: ${entry.actor}</div>
+      <div class="audit-result ${resultCls}">${resultText}</div>
+      ${errorsHtml}
+    </div>`;
+  }).join('');
+}
+
+// Initial render
+renderAll();
+</script>
+
+</body>
 </html>
